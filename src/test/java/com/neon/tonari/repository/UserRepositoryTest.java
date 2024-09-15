@@ -26,6 +26,7 @@ public class UserRepositoryTest {
         // Given
         User user = User.builder()
                 .email("test@example.com")
+                .password("")
                 .name("Test User")
                 .provider(ProviderType.GOOGLE)
                 .providerId("1234567890")
@@ -35,6 +36,30 @@ public class UserRepositoryTest {
 
         // When
         Optional<User> foundUser = userRepository.findByEmail("test@example.com");
+
+        // Then
+        assertTrue(foundUser.isPresent());
+        assertEquals(user.getEmail(), foundUser.get().getEmail());
+    }
+
+    /**
+     * 이메일로 사용자 조회 테스트.
+     */
+    @Test
+    void testFindByEmailAndProvider() {
+        // Given
+        User user = User.builder()
+                .email("test@example.com")
+                .password("")
+                .name("Test User")
+                .provider(ProviderType.GOOGLE)
+                .providerId("1234567890")
+                .role(RoleType.USER)
+                .build();
+        userRepository.save(user);
+
+        // When
+        Optional<User> foundUser = userRepository.findByEmailAndProvider("test@example.com", ProviderType.GOOGLE);
 
         // Then
         assertTrue(foundUser.isPresent());

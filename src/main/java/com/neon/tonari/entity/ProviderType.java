@@ -7,4 +7,14 @@ public enum ProviderType {
     GOOGLE,
     KAKAO,
     NAVER
+    ;
+
+    public static ProviderType of(String type) {
+        return switch (type) {
+            case "google" -> ProviderType.GOOGLE;
+            case "kakao" -> ProviderType.KAKAO;
+            case "naver" -> ProviderType.NAVER;
+            default -> null;
+        };
+    }
 }

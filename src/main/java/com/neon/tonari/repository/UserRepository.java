@@ -1,5 +1,6 @@
 package com.neon.tonari.repository;
 
+import com.neon.tonari.entity.ProviderType;
 import com.neon.tonari.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
@@ -16,4 +17,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return 이메일에 해당하는 사용자(Optional)
      */
     Optional<User> findByEmail(String email);
+
+    /**
+     * 이메일과 제공자를 기반으로 사용자를 조회합니다.
+     *
+     * @param email 조회할 사용자의 이메일
+     * @param provider 조회할 사용자 정보의 제공자
+     * @return 이메일에 해당하는 사용자(Optional)
+     */
+    Optional<User> findByEmailAndProvider(String email, ProviderType provider);
+
 }
