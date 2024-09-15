@@ -21,7 +21,11 @@ public class SecurityConfig {
                         .requestMatchers("/", "/login**", "/css/**", "/js/**").permitAll()  // 특정 경로 허용
                         .anyRequest().authenticated()  // 그 외의 요청은 인증 필요
                 )
-                .oauth2Login(withDefaults());  // OAuth2 로그인 설정
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")  // 사용자 정의 로그인 페이지 설정
+                        .defaultSuccessUrl("/", true)  // 로그인 성공 후 리디렉션
+                        .failureUrl("/login?error=true")
+                );
 
         return http.build();
     }

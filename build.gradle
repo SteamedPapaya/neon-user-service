@@ -54,6 +54,7 @@ dependencies {
 	testImplementation 'org.testcontainers:junit-jupiter'
 	testImplementation 'org.testcontainers:mysql'
 	testImplementation 'com.tngtech.archunit:archunit-junit5:0.23.1'
+	testImplementation 'org.springframework.security:spring-security-test'
 
 	// Monitoring
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'

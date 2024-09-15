@@ -29,10 +29,10 @@ public class User {
     private String email;
 
     /**
-     * 사용자의 이름입니다.
+     * 사용자 계정의 비밀번호입니다.
      */
     @Column(nullable = false)
-    private String name;
+    private String password;
 
     /**
      * 소셜 로그인 제공자입니다.
@@ -40,6 +40,12 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ProviderType provider;
+
+    /**
+     * 사용자의 이름입니다.
+     */
+    @Column(nullable = false)
+    private String name;
 
     /**
      * 제공자에서 발급한 사용자 ID입니다.
@@ -53,4 +59,12 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RoleType role;
+
+    public User(Long id, String email, String password, ProviderType provider, String name) {
+        this.id = id;
+        this.email = email;
+        this.password = password;
+        this.provider = provider;
+        this.name = name;
+    }
 }
