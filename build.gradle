@@ -8,6 +8,10 @@ plugins {
 group = 'com.nemo'
 version = '0.0.1-SNAPSHOT'
 
+jacoco {
+	toolVersion = "0.8.8"
+}
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(17)
@@ -70,4 +74,12 @@ dependencyManagement {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport // 테스트 후에 Jacoco 리포트를 생성
+}
+
+jacocoTestReport {
+	reports {
+		xml.required = true
+		html.required = true
+	}
 }
