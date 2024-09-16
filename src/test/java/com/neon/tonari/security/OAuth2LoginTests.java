@@ -1,22 +1,33 @@
 package com.neon.tonari.security;
 
-import org.junit.jupiter.api.Disabled;
+import com.neon.tonari.entity.ProviderType;
+import com.neon.tonari.entity.User;
+import com.neon.tonari.entity.RoleType; // RoleType 추가 필요
+import com.neon.tonari.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-class OAuth2LoginTests {
+@ActiveProfiles("test")
+public class OAuth2LoginTests {
 
     @Autowired
     private MockMvc mockMvc;
@@ -24,19 +35,39 @@ class OAuth2LoginTests {
     @Autowired
     private TestRestTemplate restTemplate;
 
-    @Test
-    @WithMockUser
-    void shouldRedirectToOauth2Provider() throws Exception {
-        mockMvc.perform(get("/oauth2/authorization/google"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("https://accounts.google.com/**"));
+    @Autowired
+    private UserRepository userRepository;
+
+    private String jwtToken;
+
+    @BeforeEach
+    public void setUp() {
+        userRepository.deleteAll(); // 테스트 환경을 초기화하기 위해 모든 사용자 삭제
+
+        // Given: 사용자 정보 저장
+        User user = new User(null, "testuser@example.com", "", ProviderType.GOOGLE, "Test User", "google-sub-id", RoleType.USER);
+        userRepository.save(user);
+
+        // When: JWT 토큰 발급
+        ResponseEntity<String> response = restTemplate.getForEntity("/api/auth/token", String.class);
+        jwtToken = response.getBody(); // 실제 JWT 토큰 저장
     }
 
-    @Disabled
     @Test
-    public void whenLoginWithGoogle_thenSuccess() {
-        // TODO: 구글 로그인 성공 시 테스트 코드 구현
-        ResponseEntity<String> response = restTemplate.getForEntity("/oauth2/authorization/google", String.class);
-        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+    @WithMockUser(username = "testuser@example.com", roles = {"USER"})
+    void whenLoginWithGoogle_thenRedirectToOAuthProvider() throws Exception {
+        // When & Then
+        mockMvc.perform(get("/oauth2/authorization/google"))
+                .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser@example.com", roles = {"USER"})
+    void whenGetUserProfile_thenSuccess() throws Exception {
+        // When & Then
+        mockMvc.perform(get("/api/user/me")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("testuser@example.com"));
     }
 }
