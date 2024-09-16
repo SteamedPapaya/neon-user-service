@@ -1,34 +1,30 @@
 package com.neon.tonari.controller;
 
-import com.neon.tonari.entity.User;
-import com.neon.tonari.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
-@RequiredArgsConstructor
 public class UserController {
 
-    private final UserRepository userRepository;
-
     @GetMapping("/me")
-    public ResponseEntity<User> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        String email = userDetails.getUsername();
-        Optional<User> userOptional = userRepository.findByEmail(email);
+    public Map<String, Object> getCurrentUser(Authentication authentication) {  // JSON 객체 반환
+        Map<String, Object> response = new HashMap<>();
 
-        if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            return ResponseEntity.ok(user);
+        if (authentication != null && authentication.isAuthenticated()) {
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            response.put("email", userDetails.getUsername());
+            response.put("roles", userDetails.getAuthorities());
+            // 필요한 경우 추가 필드를 더 넣을 수 있습니다.
         } else {
-            return ResponseEntity.notFound().build();
+            response.put("error", "Unauthorized");
         }
+        return response;
     }
 }
