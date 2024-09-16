@@ -45,10 +45,10 @@ public class SecurityConfig {
                         .defaultSuccessUrl("/", true)  // 로그인 성공 후 리디렉션
                         .failureUrl("/login?error=true")
                         .successHandler((request, response, authentication) -> {
-                            // 로그인 성공 시 JWT 생성 및 반환 로직 추가
+                            // JWT 생성
                             String token = jwtTokenProvider.generateToken(authentication.getName());
-                            response.addHeader("Authorization", "Bearer " + token);
-                            response.sendRedirect("/");
+                            // 프론트엔드로 리디렉션 및 JWT 전달
+                            response.sendRedirect(clientOrigin + "/?token=" + token);
                         })
                 );
 
