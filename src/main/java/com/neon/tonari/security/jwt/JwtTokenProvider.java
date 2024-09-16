@@ -11,17 +11,23 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
-    @Value("${app.jwtSecret}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
-    @Value("${app.jwtExpirationMs}")
-    private int jwtExpirationMs;
+    @Value("${jwt.accessTokenExpiration}")
+    private long accessTokenExpirationMs;
+
+    @Value("${jwt.refreshTokenExpiration}")
+    private long refreshTokenExpirationMs;  // 리프레시 토큰 만료 시간
 
     public String generateToken(String email) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + accessTokenExpirationMs);
+
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .setExpiration(expiryDate)
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
     }
@@ -38,5 +44,23 @@ public class JwtTokenProvider {
     public String getEmailFromToken(String token) {
         Claims claims = Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
         return claims.getSubject();
+    }
+
+    // 리프레시 토큰 만료 시간을 가져오는 메소드
+    public long getRefreshTokenExpiry() {
+        return refreshTokenExpirationMs;
+    }
+
+    // 리프레시 토큰 생성
+    public String generateRefreshToken(String email) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + refreshTokenExpirationMs);
+
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(expiryDate)
+                .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .compact();
     }
 }
