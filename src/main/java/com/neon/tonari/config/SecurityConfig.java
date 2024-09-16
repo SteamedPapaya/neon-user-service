@@ -2,6 +2,7 @@ package com.neon.tonari.config;
 
 import com.neon.tonari.security.jwt.JwtAuthenticationFilter;
 import com.neon.tonari.security.jwt.JwtTokenProvider;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -40,6 +41,17 @@ public class SecurityConfig {
                         .requestMatchers("/", "/login**", "/css/**", "/js/**", "/api/auth/token").permitAll()  // 특정 경로 허용
                         .anyRequest().authenticated()  // 그 외의 요청은 인증 필요
                 )
+        .exceptionHandling(exception -> exception
+                .authenticationEntryPoint((request, response, authException) -> {
+                    if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+                        response.setStatus(HttpServletResponse.SC_OK);  // OPTIONS 요청에 대해 OK 반환
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 상태 코드 반환
+                        response.getWriter().write("Unauthorized");
+                    }
+                })
+        )
+
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")  // 사용자 정의 로그인 페이지 설정
                         .defaultSuccessUrl("/", true)  // 로그인 성공 후 리디렉션
@@ -48,7 +60,7 @@ public class SecurityConfig {
                             // JWT 생성
                             String token = jwtTokenProvider.generateToken(authentication.getName());
                             // 프론트엔드로 리디렉션 및 JWT 전달
-                            response.sendRedirect(clientOrigin + "/?token=" + token);
+                            response.sendRedirect(clientOrigin + "/login?token=" + token);
                         })
                 );
 
@@ -63,7 +75,8 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of("http://localhost:3000", clientOrigin)); // 프론트엔드가 배포될 URL로 설정
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
+        configuration.setExposedHeaders(List.of("Authorization")); // 필요한 헤더 노출 설정
+        configuration.setAllowCredentials(true); // Credentials 허용 설정
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

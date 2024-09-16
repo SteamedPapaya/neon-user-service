@@ -3,12 +3,14 @@ package com.neon.tonari.security.jwt;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
@@ -19,6 +21,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             throws AuthenticationException {
         String token = getTokenFromRequest(request);
 
+        log.info("token=" + token);
         if (token != null && jwtTokenProvider.validateToken(token)) {
             String userEmail = jwtTokenProvider.getEmailFromToken(token);
             UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(userEmail, null, null);
