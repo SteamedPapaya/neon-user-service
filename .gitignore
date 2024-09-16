@@ -243,4 +243,4 @@ gradle-app.setting
 
 # Configuration files
 *.properties
-*.yml
+application*.yml
