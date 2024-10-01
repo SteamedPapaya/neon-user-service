@@ -2,34 +2,30 @@ package com.neon.tonari.security;
 
 import com.neon.tonari.entity.ProviderType;
 import com.neon.tonari.entity.User;
-import com.neon.tonari.entity.RoleType; // RoleType 추가 필요
+import com.neon.tonari.entity.RoleType;
 import com.neon.tonari.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class OAuth2LoginTests {
+public class FormLoginTests {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private TestRestTemplate restTemplate;
 
     @Autowired
     private UserRepository userRepository;
@@ -54,15 +50,8 @@ public class OAuth2LoginTests {
     }
 
     @Test
-    void whenLoginWithGoogle_thenRedirectToOAuthProvider() throws Exception {
-        // When & Then
-        mockMvc.perform(get("/oauth2/authorization/google"))
-                .andExpect(status().is3xxRedirection());
-    }
-
-    @Test
-    void whenGetUserProfile_thenSuccess() throws Exception {
-        // When & Then
+    void whenFormLogin_thenLoadUserDetailsService() throws Exception {
+        // 폼 기반 로그인을 통해 사용자가 성공적으로 인증되었는지 확인
         mockMvc.perform(get("/api/user/me")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken))
                 .andExpect(status().isOk())

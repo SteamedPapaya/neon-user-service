@@ -2,6 +2,7 @@ package com.neon.tonari.config;
 
 import com.neon.tonari.security.jwt.JwtAuthenticationFilter;
 import com.neon.tonari.security.jwt.JwtTokenProvider;
+import com.neon.tonari.service.CustomOAuth2UserService;
 import com.neon.tonari.service.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -32,58 +33,81 @@ public class SecurityConfig {
     private String clientOrigin;
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final CustomUserDetailsService customUserDetailsService;  // UserDetailsService 주입
+    private final CustomUserDetailsService customUserDetailsService;
+    private final CustomOAuth2UserService customOAuth2UserService;  // OAuth2 인증 서비스 추가
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)  // CSRF 설정 비활성화
-                .cors(withDefaults())  // CORS 설정 추가
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(withDefaults())
+
+                // 경로별 인증 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login**", "/css/**", "/js/**", "/api/auth/token").permitAll()  // 특정 경로 허용
-                        .anyRequest().authenticated()  // 그 외의 요청은 인증 필요
+                        .requestMatchers("/", "/login**", "/css/**", "/js/**", "/api/auth/token", "/oauth2/**", "/login/oauth2/code/**").permitAll()  // 인증 불필요 경로
+                        .requestMatchers("/api/**").authenticated()  // JWT 인증이 필요한 경로
+                        .anyRequest().authenticated()  // 그 외 요청은 인증 필요
                 )
+
+                // 폼 기반 로그인 설정
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .permitAll()
+                )
+
+                // OAuth2 로그인 설정
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/oauth2/authorization/google")
+                        .defaultSuccessUrl("/", true)
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService))  // OAuth2 유저 서비스 연결
+                        .failureUrl("/login?error=true")
+                        .successHandler((request, response, authentication) -> {
+                            String token = jwtTokenProvider.generateToken(authentication.getName());
+                            response.sendRedirect(clientOrigin + "/login?token=" + token);  // JWT 생성 후 리디렉션
+                        })
+                )
+
+                // JWT 필터를 UsernamePasswordAuthenticationFilter 전에 추가, JWT 검증은 /api 경로에서만 수행하도록 필터 설정
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+
+                // 예외 처리
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, authException) -> {
                             if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-                                response.setStatus(HttpServletResponse.SC_OK);  // OPTIONS 요청에 대해 OK 반환
+                                response.setStatus(HttpServletResponse.SC_OK);  // OPTIONS 요청은 OK 반환
                             } else {
-                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 상태 코드 반환
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);  // 401 에러 반환
                                 response.getWriter().write("Unauthorized");
                             }
                         })
-                )
-                .oauth2Login(oauth2 -> oauth2
-                        .loginPage("/login")  // 사용자 정의 로그인 페이지 설정
-                        .defaultSuccessUrl("/", true)  // 로그인 성공 후 리디렉션
-                        .failureUrl("/login?error=true")
-                        .successHandler((request, response, authentication) -> {
-                            // JWT 생성
-                            String token = jwtTokenProvider.generateToken(authentication.getName());
-                            // 프론트엔드로 리디렉션 및 JWT 전달
-                            response.sendRedirect(clientOrigin + "/login?token=" + token);
-                        })
                 );
-
-        http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, customUserDetailsService), UsernamePasswordAuthenticationFilter.class);  // 필터 등록
 
         return http.build();
     }
 
+    // JWT 필터 빈 생성
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtTokenProvider, customUserDetailsService);
+    }
+
+    // CORS 설정
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(clientOrigin)); // 프론트엔드가 배포될 URL로 설정
+        configuration.setAllowedOrigins(List.of(clientOrigin));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        configuration.setExposedHeaders(List.of("Authorization")); // 필요한 헤더 노출 설정
-        configuration.setAllowCredentials(true); // Credentials 허용 설정
+        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
+    // AuthenticationManager 빈 생성
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
