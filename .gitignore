@@ -242,5 +242,5 @@ gradle-app.setting
 # End of https://www.toptal.com/developers/gitignore/api/java,gradle,intellij+all,macos,windows
 
 # Configuration files
-*.properties
-application*.yml
+src/main/resources/*.properties
+src/main/resources/application*.yml
