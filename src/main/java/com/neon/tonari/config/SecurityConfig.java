@@ -2,6 +2,7 @@ package com.neon.tonari.config;
 
 import com.neon.tonari.security.jwt.JwtAuthenticationFilter;
 import com.neon.tonari.security.jwt.JwtTokenProvider;
+import com.neon.tonari.service.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +32,7 @@ public class SecurityConfig {
     private String clientOrigin;
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final CustomUserDetailsService customUserDetailsService;  // UserDetailsService 주입
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -41,17 +43,16 @@ public class SecurityConfig {
                         .requestMatchers("/", "/login**", "/css/**", "/js/**", "/api/auth/token").permitAll()  // 특정 경로 허용
                         .anyRequest().authenticated()  // 그 외의 요청은 인증 필요
                 )
-        .exceptionHandling(exception -> exception
-                .authenticationEntryPoint((request, response, authException) -> {
-                    if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
-                        response.setStatus(HttpServletResponse.SC_OK);  // OPTIONS 요청에 대해 OK 반환
-                    } else {
-                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 상태 코드 반환
-                        response.getWriter().write("Unauthorized");
-                    }
-                })
-        )
-
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+                                response.setStatus(HttpServletResponse.SC_OK);  // OPTIONS 요청에 대해 OK 반환
+                            } else {
+                                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 상태 코드 반환
+                                response.getWriter().write("Unauthorized");
+                            }
+                        })
+                )
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")  // 사용자 정의 로그인 페이지 설정
                         .defaultSuccessUrl("/", true)  // 로그인 성공 후 리디렉션
@@ -64,7 +65,7 @@ public class SecurityConfig {
                         })
                 );
 
-        http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, customUserDetailsService), UsernamePasswordAuthenticationFilter.class);  // 필터 등록
 
         return http.build();
     }
@@ -72,7 +73,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", clientOrigin)); // 프론트엔드가 배포될 URL로 설정
+        configuration.setAllowedOrigins(List.of(clientOrigin)); // 프론트엔드가 배포될 URL로 설정
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setExposedHeaders(List.of("Authorization")); // 필요한 헤더 노출 설정

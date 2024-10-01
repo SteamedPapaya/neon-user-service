@@ -38,7 +38,7 @@ public class User {
      * 소셜 로그인 제공자입니다.
      */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private ProviderType provider;
 
     /**
@@ -50,7 +50,7 @@ public class User {
     /**
      * 제공자에서 발급한 사용자 ID입니다.
      */
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String providerId;
 
     /**
