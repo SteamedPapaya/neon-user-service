@@ -1,5 +1,8 @@
 package com.neon.tonari.controller;
 
+import com.neon.tonari.entity.User;
+import com.neon.tonari.service.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,20 +17,27 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
+@RequiredArgsConstructor
 @Slf4j
 public class UserController {
 
+    private final UserService userService;
+
     @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> getCurrentUser(Authentication authentication) {  // JSON 객체 반환
+    public ResponseEntity<Map<String, Object>> getCurrentUser(Authentication authentication) {
+        log.info("isAuthenticated={}", authentication.isAuthenticated());
         Map<String, Object> response = new HashMap<>();
         if (authentication != null && authentication.isAuthenticated()) {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            response.put("email", userDetails.getUsername());
+            String email = userDetails.getUsername();
+            User user = userService.findUserByEmail(email);
+            response.put("email", email);
+            response.put("name", user != null ? user.getName() : "None"); // Add user's name
             response.put("roles", userDetails.getAuthorities());
             return ResponseEntity.ok(response);
         } else {
             response.put("error", "Unauthorized");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response); // 401 상태 코드 반환
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
     }
 }
