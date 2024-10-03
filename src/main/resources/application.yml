@@ -1,5 +1,6 @@
 server:
   port: 8080
+  forward-headers-strategy: native # Spring Boot가 리버스 프록시로부터 받은 X-Forwarded-* 헤더를 신뢰하고 처리하도록 만듬
 
 management:
   endpoints:
@@ -10,6 +11,7 @@ management:
 spring:
   application:
     name: tonari
+    base-url: https://user.neon7.site
 
   datasource:
     url: jdbc:mysql://mysql-container:3306/tonari?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
