@@ -14,7 +14,7 @@ spring:
     base-url: https://user.neon7.site
 
   datasource:
-    url: jdbc:mysql://mysql-container:3306/tonari?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
+    url: jdbc:mysql://52.78.195.162:3306/tamago?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
     username: siyoon
     password: 375632
     driver-class-name: com.mysql.cj.jdbc.Driver

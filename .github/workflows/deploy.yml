@@ -69,6 +69,8 @@ jobs:
             docker run -d \
               --name tonari-app \
               --network tonari-network \
+              --cpus="0.8" \
+              --memory="512m" \
               -p 8080:8080 \
               -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
               -e GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
