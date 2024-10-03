@@ -19,7 +19,7 @@ spring:
 
   data:
     redis:
-      host: redis-container
+      host: 54.180.133.79
       port: 6379
 
   jpa:
