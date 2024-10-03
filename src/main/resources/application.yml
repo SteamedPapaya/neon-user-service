@@ -11,7 +11,7 @@ management:
 spring:
   application:
     name: tonari
-    base-url: https://user.neon7.site
+    base-url: https://api.neon7.site
 
   datasource:
     url: jdbc:mysql://52.78.195.162:3306/tamago?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
