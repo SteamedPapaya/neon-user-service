@@ -29,6 +29,9 @@ repositories {
 }
 
 dependencies {
+	// Spring Cloud Gateway
+	implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
+
 	// Spring Web
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
