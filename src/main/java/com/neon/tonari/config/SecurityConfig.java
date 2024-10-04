@@ -48,7 +48,7 @@ public class SecurityConfig {
 
                 // 경로별 인증 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login**", "/css/**", "/js/**", "/api/auth/token", "/oauth2/**", "/login/oauth2/code/**").permitAll()  // 인증 불필요 경로
+                        .requestMatchers("/", "/login**", "/css/**", "/js/**", "/api/auth/token", "/oauth2/**", "/login/oauth2/code/**", "/users/me").permitAll()  // 인증 불필요 경로
                         .requestMatchers("/**").authenticated()  // JWT 인증이 필요한 경로
                         .anyRequest().authenticated()  // 그 외 요청은 인증 필요
                 )
