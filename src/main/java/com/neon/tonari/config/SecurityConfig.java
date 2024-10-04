@@ -2,10 +2,12 @@ package com.neon.tonari.config;
 
 import com.neon.tonari.security.jwt.JwtAuthenticationFilter;
 import com.neon.tonari.security.jwt.JwtTokenProvider;
+import com.neon.tonari.service.AuthService;
 import com.neon.tonari.service.CustomOAuth2UserService;
 import com.neon.tonari.service.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +29,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
     @Value("${app.client.origin}")
@@ -35,6 +38,7 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService customUserDetailsService;
     private final CustomOAuth2UserService customOAuth2UserService;  // OAuth2 인증 서비스 추가
+    private final AuthService authService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -47,6 +51,19 @@ public class SecurityConfig {
                         .requestMatchers("/", "/login**", "/css/**", "/js/**", "/api/auth/token", "/oauth2/**", "/login/oauth2/code/**").permitAll()  // 인증 불필요 경로
                         .requestMatchers("/**").authenticated()  // JWT 인증이 필요한 경로
                         .anyRequest().authenticated()  // 그 외 요청은 인증 필요
+                )
+
+                // 로그아웃 설정 추가
+                .logout(logout -> logout
+                        .logoutUrl("/auth/logout")  // 로그아웃 요청 경로
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            String email = (authentication != null) ? authentication.getName() : "anonymous";
+                            authService.deleteRefreshToken(email);  // 리프레시 토큰 삭제
+                            log.info("Logged out user {}", email);
+                            response.setStatus(HttpServletResponse.SC_OK);  // 로그아웃 성공 후 OK 반환
+                        })
+                        .invalidateHttpSession(true)  // 세션 무효화
+                        .clearAuthentication(true)    // 인증 정보 제거
                 )
 
                 // 폼 기반 로그인 설정
