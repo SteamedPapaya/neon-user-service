@@ -31,7 +31,7 @@ public class User {
     /**
      * 사용자 계정의 비밀번호입니다.
      */
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
 
     /**
