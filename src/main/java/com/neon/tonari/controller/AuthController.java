@@ -27,12 +27,4 @@ public class AuthController {
         String token = jwtTokenProvider.generateToken(authentication.getName());
         return ResponseEntity.ok(token);
     }
-
-    @PostMapping("/logout")
-    public ResponseEntity<Void> logout(Authentication authentication) {
-        String email = authentication.getName();
-        authService.deleteRefreshToken(email); // 리프레시 토큰 삭제
-        log.info("Logged out user {}", email);
-        return ResponseEntity.ok().build();
-    }
 }
