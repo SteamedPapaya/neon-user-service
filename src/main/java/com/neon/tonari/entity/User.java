@@ -32,7 +32,7 @@ public class User {
      * 사용자 계정의 비밀번호입니다.
      */
     @Column(nullable = true)
-    private String password;
+    private String password = "";
 
     /**
      * 소셜 로그인 제공자입니다.
