@@ -37,7 +37,7 @@ class AuthControllerTest {
         userRepository.save(user);
 
         // When
-        ResponseEntity<String> response = restTemplate.getForEntity("/api/auth/token", String.class);
+        ResponseEntity<String> response = restTemplate.getForEntity("/auth/token", String.class);
 
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);

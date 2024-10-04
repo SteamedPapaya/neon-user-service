@@ -41,7 +41,7 @@ public class FormLoginTests {
         userRepository.save(user);
 
         // When: MockMvc를 통해 JWT 토큰 발급 요청 시뮬레이션
-        MvcResult result = mockMvc.perform(get("/api/auth/token")
+        MvcResult result = mockMvc.perform(get("/auth/token")
                         .with(user("testuser@example.com").roles("USER")))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -52,7 +52,7 @@ public class FormLoginTests {
     @Test
     void whenFormLogin_thenLoadUserDetailsService() throws Exception {
         // 폼 기반 로그인을 통해 사용자가 성공적으로 인증되었는지 확인
-        mockMvc.perform(get("/api/user/me")
+        mockMvc.perform(get("/users/me")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("testuser@example.com"));

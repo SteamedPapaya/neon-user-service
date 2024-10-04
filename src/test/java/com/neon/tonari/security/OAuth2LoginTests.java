@@ -45,7 +45,7 @@ public class OAuth2LoginTests {
         userRepository.save(user);
 
         // When: MockMvc를 통해 JWT 토큰 발급 요청 시뮬레이션
-        MvcResult result = mockMvc.perform(get("/api/auth/token")
+        MvcResult result = mockMvc.perform(get("/auth/token")
                         .with(user("testuser@example.com").roles("USER")))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -63,7 +63,7 @@ public class OAuth2LoginTests {
     @Test
     void whenGetUserProfile_thenSuccess() throws Exception {
         // When & Then
-        mockMvc.perform(get("/api/user/me")
+        mockMvc.perform(get("/users/me")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("testuser@example.com"));
