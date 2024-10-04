@@ -37,6 +37,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         .email(email)
                         .provider(provider)
                         .name(name)
+                        .password("")
                         .providerId(providerId)
                         .role(RoleType.USER)
                         .build());
